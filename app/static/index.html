@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Penguinficator</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f8ff;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        h1 {
+            background-color: #add8e6;
+            padding: 10px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            margin: 10px 0;
+        }
+
+        select, input[type="text"] {
+            width: 90%;
+            padding: 10px;
+            border: 1px solid #000;
+            border-radius: 10px;
+            outline: none;
+        }
+
+        select {
+            cursor: pointer;
+        }
+
+        button {
+            background-color: #007BFF;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #result {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Penguinficator</h1>
+
+        <div class="input-group">
+            <select id="island">
+                <option disabled selected>Seleccione la isla de interés</option>
+                <option>Torgersen</option>
+                <option>Biscoe</option>
+                <option>Dream</option>
+            </select>
+        </div>
+
+        <div class="input-group">
+            <input type="text" id="culmen_length_mm" placeholder="Digite la longitud del culmen">
+        </div>
+
+        <div class="input-group">
+            <input type="text" id="culmen_depth_mm" placeholder="Digite la profundidad del culmen">
+        </div>
+
+        <div class="input-group">
+            <input type="text" id="flipper_length_mm" placeholder="Digite la longitud de la aleta">
+        </div>
+
+        <div class="input-group">
+            <input type="text" id="body_mass_g" placeholder="Digite la masa corporal">
+        </div>
+
+        <div class="input-group">
+            <select id="sex">
+                <option disabled selected>Seleccione el sexo del pingüino</option>
+                <option>MALE</option>
+                <option>FEMALE</option>
+            </select>
+        </div>
+
+        <div class="input-group">
+            <select id="model">
+                <option disabled selected>Seleccione el modelo de interés</option>
+                <option>decision_tree</option>
+                <option>xgboost</option>
+                <option>svm</option>
+            </select>
+        </div>
+
+        <button onclick="predictSpecies()">Enviar</button>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+        async function predictSpecies() {
+            const data = {
+                island: document.getElementById("island").value,
+                culmen_length_mm: parseFloat(document.getElementById("culmen_length_mm").value),
+                culmen_depth_mm: parseFloat(document.getElementById("culmen_depth_mm").value),
+                flipper_length_mm: parseFloat(document.getElementById("flipper_length_mm").value),
+                body_mass_g: parseFloat(document.getElementById("body_mass_g").value),
+                sex: document.getElementById("sex").value,
+                model: document.getElementById("model").value
+            };
+
+            try {
+                const response = await fetch('http://localhost:8989/predict', { // URL del API FastAPI
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    const message = `La especie del pingüino es: ${result.species_predicted}`;
+                    
+                    alert(message); // Muestra la predicción en un popup
+                    document.getElementById("result").innerText = message; // También actualiza el resultado en la página
+                } else {
+                    const error = await response.json();
+                    alert(`Error: ${error.detail}`);
+                    document.getElementById("result").innerText = `Error: ${error.detail}`;
+                }
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+                document.getElementById("result").innerText = `Error: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>
