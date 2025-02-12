@@ -129,7 +129,8 @@
             };
 
             try {
-                const response = await fetch('https://penguins-api.onrender.com/predict', {  // URL del API FastAPI
+               // const response = await fetch('http://localhost:8989/predict', { // URL del API FastAPI
+                const response = await fetch('https://penguins-api.onrender.com/predict', {  // URL del API FastAPI    
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
