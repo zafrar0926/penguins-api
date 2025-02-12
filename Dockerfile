@@ -7,4 +7,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-CMD ["uvicorn", "app.fastapi_penguins:app", "--host", "0.0.0.0", "--port", "8989"]
+CMD ["uvicorn", "app.fastapi_penguins:app", "--host", "0.0.0.0", "--port", "${PORT:-8989}"]
