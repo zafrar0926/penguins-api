@@ -1,68 +1,118 @@
-# 🐧 Penguin Species Prediction API
+🐧 Penguin Species Prediction API
 
-Este proyecto es una API construida con **FastAPI** y desplegada en **Render**, que permite predecir la especie de un pingüino a partir de sus características morfológicas utilizando modelos de Machine Learning.
+Este proyecto es una API construida con FastAPI y Docker Compose, que permite predecir la especie de un pingüino a partir de sus características morfológicas utilizando modelos de Machine Learning. Se incluyen contenedores para FastAPI y JupyterLab, permitiendo entrenar y actualizar modelos dinámicamente sin reconstruir la API.
 
-## 🚀 Tecnologías Utilizadas
+🚀 Tecnologías Utilizadas
 
-- **FastAPI** (para construir la API)
-- **Uvicorn** (servidor ASGI)
-- **Scikit-learn** (para los modelos de ML)
-- **Joblib** (para cargar los modelos entrenados)
-- **Docker** (para contenedorización y despliegue)
-- **Render** (para hosting de la API)
+FastAPI (para construir la API)
 
-## 📂 Estructura del Proyecto
+Uvicorn (servidor ASGI)
 
-```
+Scikit-learn (para los modelos de ML)
+
+Joblib (para cargar los modelos entrenados)
+
+Docker & Docker Compose (para contenerización y orquestación de servicios)
+
+JupyterLab (para el entrenamiento de modelos)
+
+UV (para la gestión de entornos virtuales de Python)
+
+📂 Estructura del Proyecto
+
 📁 penguin_project
-│-- 📁 static/            # Archivos estáticos (index.html, CSS, JS)
-│-- 📁 models/            # Modelos entrenados (.pkl)
-│-- 📄 app.fastapi_penguins.py  # Código de la API en FastAPI
-│-- 📄 Dockerfile         # Configuración del contenedor Docker
-│-- 📄 requirements.txt   # Dependencias del proyecto
-│-- 📄 README.md          # Este archivo
-```
+│-- 📁 app/                  # Código de la API en FastAPI
+│   │-- 📄 fastapi_penguins.py  # API FastAPI con modelos ML
+│-- 📁 models/               # Modelos entrenados (.pkl)
+│-- 📁 static/               # Archivos estáticos (index.html, CSS, JS)
+│-- 📄 Dockerfile            # Configuración de la imagen Docker
+│-- 📄 docker-compose.yml    # Orquestación de servicios con Docker Compose
+│-- 📄 requirements.txt      # Dependencias del proyecto
+│-- 📄 requirements.uv       # Dependencias del proyecto
+│-- 📄 README.md             # Documentación del proyecto
 
-## 🛠️ Instalación y Ejecución Local
+🛠️ Instalación y Ejecución Local
 
-### **1️⃣ Clonar el Repositorio**
-```sh
-git clone https://github.com/zafrar09/penguins-api.git
-cd penguins-api
-```
+1️⃣ Clonar el Repositorio
 
-### **3️⃣ Instalar Dependencias**
-```sh
-pip install -r requirements.txt
-```
+git clone https://github.com/tu-usuario/penguin-api.git
+cd penguin-api
 
-### **4️⃣ Ejecutar la API en Local**
-```sh
-uvicorn app.fastapi_penguins:app --reload
-```
+2️⃣ Construir y levantar los contenedores con Docker Compose
 
-La API estará disponible en: 👉 [http://localhost:8989](http://localhost:8989)
+docker-compose up --build
 
-## 🐳 Uso con Docker
+Esto levantará:
 
-### **1️⃣ Construir la Imagen Docker**
-```sh
+JupyterLab en el puerto 8888
+
+FastAPI en el puerto 8989
+
+3️⃣ Acceder a los servicios:
+
+API FastAPI: 👉 http://localhost:8989/docs
+
+JupyterLab: 👉 http://localhost:8888/lab
+
+🐳 Uso con Docker
+
+Para construir la imagen manualmente
+
 docker build -t penguin_api .
-```
 
-### **2️⃣ Ejecutar el Contenedor**
-```sh
+Para ejecutar el contenedor manualmente
+
 docker run -p 8989:8989 --name penguin_container penguin_api
-```
 
-## 🌍 Uso en Render (Producción)
+📌 Docker Compose: Servicios y Volumen Compartido
 
-La API está desplegada en Render y accesible en:  
-👉 **[https://penguins-api.onrender.com](https://penguins-api.onrender.com)**
+Este proyecto usa Docker Compose para definir y conectar los servicios:
 
-### **Ejemplo de Petición `POST` a `/predict`**
-```sh
-curl -X POST "https://penguins-api.onrender.com/predict" -H "Content-Type: application/json" -d '{
+version: "3.8"
+
+services:
+  jupyterlab:
+    image: python:3.9
+    container_name: jupyter_container
+    working_dir: /workspace
+    volumes:
+      - shared_models:/workspace/models
+    ports:
+      - "8888:8888"
+    command: >
+      bash -c "pip install uv jupyterlab && jupyter lab --ip=0.0.0.0 --port=8888 --allow-root --NotebookApp.token='' --NotebookApp.password=''"
+
+  fastapi:
+    build: .
+    container_name: fastapi_container
+    working_dir: /app
+    volumes:
+      - shared_models:/app/models
+    ports:
+      - "8989:8989"
+    depends_on:
+      - jupyterlab
+    environment:
+      - PORT=8989
+    command: >
+      bash -c "cp -r /app/models_backup/* /app/models/ && pip install fastapi uvicorn && pip install -r requirements.txt && uvicorn app.fastapi_penguins:app --host 0.0.0.0 --port 8989"
+
+volumes:
+  shared_models:
+
+📊 Entrenamiento y Actualización de Modelos
+
+Accede a JupyterLab en http://localhost:8888/lab.
+
+Entrena el modelo y guárdalo en /workspace/models/.
+
+FastAPI accederá al modelo actualizado sin necesidad de reconstruir el contenedor.
+
+📝 Uso de la API
+
+Ejemplo de Petición POST a /predict
+
+curl -X POST "http://localhost:8989/predict" -H "Content-Type: application/json" -d '{
   "island": "Torgersen",
   "culmen_length_mm": 50.0,
   "culmen_depth_mm": 15.0,
@@ -71,12 +121,17 @@ curl -X POST "https://penguins-api.onrender.com/predict" -H "Content-Type: appli
   "sex": "MALE",
   "model": "decision_tree"
 }'
-```
 
-### **Respuesta Esperada**
-```json
+Respuesta Esperada
+
 {
   "species_predicted": "Chinstrap"
 }
-```
-📌 **Desarrollado por:** Andrés F Matallana. Edwin A Caro. Santiago Zafra Rodríguez 🚀
+
+📌 Desarrollado por:
+
+Andrés F Matallana
+
+Edwin A Caro
+
+Santiago Zafra Rodríguez 🚀
