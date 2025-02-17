@@ -1,0 +1,32 @@
+version: "3.8"
+
+services:
+  jupyterlab:
+    image: python:3.9
+    container_name: jupyter_container
+    working_dir: /workspace
+    volumes:
+      - shared_models:/workspace/models
+    ports:
+      - "8888:8888"
+    command: >
+      bash -c "pip install uv jupyterlab && jupyter lab --ip=0.0.0.0 --port=8888 --allow-root --NotebookApp.token='' --NotebookApp.password=''"
+    
+  fastapi:
+    build: .
+    container_name: fastapi_container
+    working_dir: /app
+    volumes:
+      - shared_models:/app/models
+    ports:
+      - "8989:8989"
+    depends_on:
+      - jupyterlab
+    environment:
+      - PORT=8989
+    command: >
+      bash -c "pip install fastapi uvicorn && pip install -r requirements.uv && uvicorn app.fastapi_penguins:app --host 0.0.0.0 --port 8989"
+
+volumes:
+  shared_models:
+    name: shared_models

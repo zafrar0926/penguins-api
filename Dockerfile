@@ -2,8 +2,12 @@ FROM python:3.9
 
 WORKDIR /app
 
+COPY app/models /app/models
 COPY requirements.txt requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+
+RUN pip install uv && \
+    uv venv && \
+    uv pip install -r requirements.txt
 
 COPY . .
 
